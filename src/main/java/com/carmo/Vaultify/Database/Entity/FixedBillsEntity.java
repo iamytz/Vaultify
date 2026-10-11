@@ -15,6 +15,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "FIXED_BILLS")
 public class FixedBillsEntity {
 
     @Id

@@ -31,13 +31,13 @@ public class CreditCardStatementEntity {
     private Integer year;
 
     @Column(name = "TOTAL_VALUE",nullable = false)
-    private BigDecimal totalVAlue;
+    private BigDecimal totalValue;
 
     @Column(name = "STATUS",nullable = false)
     private String status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CREDIT_CAR_ID")
+    @JoinColumn(name = "CREDIT_CARD_ID")
     private CreditCardEntity creditCard;
 
     @OneToMany(mappedBy = "creditCardStatement")

@@ -23,7 +23,7 @@ public class InvestmentsEntity {
     @Column(name = "ID")
     private UUID id;
 
-    @Column(name = "ASSET_CODE",nullable = false,unique = true) //se torna unico pois nao podem ter 2 investimentos iguais, eles dever ser somados em um só
+    @Column(name = "ASSET_CODE",nullable = false) //se torna unico pois nao podem ter 2 investimentos iguais, eles dever ser somados em um só
     private String assetCode;
 
     @Column(name = "ASSET_TYPE",nullable = false)
