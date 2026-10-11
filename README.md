@@ -6,120 +6,120 @@ O diagrama abaixo descreve a estrutura das tabelas, chaves primárias (PK), chav
 
 
 ---
-
 ```mermaid
 erDiagram
-    USUARIOS ||--o{ CONTAS : possui
-    USUARIOS ||--o{ CARTOES_CREDITO : possui
-    USUARIOS ||--o{ CATEGORIAS : possui
-    USUARIOS ||--o{ FINANCIAMENTOS : possui
-    USUARIOS ||--o{ INVESTIMENTOS : possui
-    
-    CONTAS ||--o{ TRANSACOES : registra
-    CONTAS ||--o{ CONTAS_FIXAS : debita
-    CARTOES_CREDITO ||--o{ FATURAS : possui
-    
-    FATURAS ||--o{ TRANSACOES : agrupa
-    CATEGORIAS ||--o{ TRANSACOES : classifica
-    CATEGORIAS ||--o{ CONTAS_FIXAS : classifica
-    
-    FINANCIAMENTOS ||--o{ PARCELAS_FINANCIAMENTO : gera
-    CONTAS ||--o{ PARCELAS_FINANCIAMENTO : debita
+    USERS ||--o{ BILL : owns
+    USERS ||--o{ CREDIT_CARD : owns
+    USERS ||--o{ CATEGORY : owns
+    USERS ||--o{ FINANCING : owns
+    USERS ||--o{ INVESTMENTS : owns
 
-    USUARIOS {
-        uuid id PK
-        string nome
-        string email
-        string senha_hash
-        datetime criado_em
+    BILL ||--o{ TRANSACTION : records
+    BILL ||--o{ FIXED_BILLS : pays
+    BILL ||--o{ FINANCING_INSTALLMENTS : pays
+
+    CREDIT_CARD ||--o{ CREDIT_CARD_STATEMENT : has
+    CREDIT_CARD_STATEMENT ||--o{ TRANSACTION : groups
+
+    CATEGORY ||--o{ TRANSACTION : classifies
+    CATEGORY ||--o{ FIXED_BILLS : classifies
+
+    FINANCING ||--o{ FINANCING_INSTALLMENTS : generates
+
+    USERS {
+        UUID id PK
+        String name
+        String email UK
+        String hashPwd
+        LocalDateTime createdAt
     }
 
-    CONTAS {
-        uuid id PK
-        uuid usuario_id FK
-        string nome
-        string tipo
-        decimal saldo_atual
-        string moeda
+    BILL {
+        UUID id PK
+        String name
+        String type
+        BigDecimal currentBalance
+        String currency
+        UUID user FK
     }
 
-    CARTOES_CREDITO {
-        uuid id PK
-        uuid usuario_id FK
-        string nome
-        decimal limite_total
-        integer dia_fechamento
-        integer dia_vencimento
+    CREDIT_CARD {
+        UUID id PK
+        String name
+        BigDecimal totalLimit
+        LocalDate closingDay
+        LocalDate dueDay
+        UUID user FK
     }
 
-    FATURAS {
-        uuid id PK
-        uuid cartao_id FK
-        integer mes
-        integer ano
-        decimal valor_total
-        string status
+    CREDIT_CARD_STATEMENT {
+        UUID id PK
+        Integer month
+        Integer year
+        BigDecimal totalVAlue
+        String status
+        UUID creditCard FK
     }
 
-    CATEGORIAS {
-        uuid id PK
-        uuid usuario_id FK
-        string nome
-        string tipo
+    CATEGORY {
+        UUID id PK
+        String name
+        String type
+        UUID user FK
     }
 
-    TRANSACOES {
-        uuid id PK
-        uuid conta_id FK
-        uuid cartao_fatura_id FK
-        uuid categoria_id FK
-        string descricao
-        decimal valor
-        string tipo
-        date data_transacao
+    TRANSACTION {
+        UUID id PK
+        String description
+        BigDecimal value
+        String type
+        LocalDate transactionDate
+        UUID bill FK
+        UUID creditCardStatement FK
+        UUID category FK
     }
 
-    CONTAS_FIXAS {
-        uuid id PK
-        uuid conta_id FK
-        uuid categoria_id FK
-        string descricao
-        decimal valor
-        integer dia_vencimento
-        string frequencia
-        boolean ativo
+    FIXED_BILLS {
+        UUID id PK
+        String description
+        BigDecimal value
+        LocalDate dueDay
+        String frequency
+        boolean Isactive
+        UUID bill FK
+        UUID category FK
     }
 
-    FINANCIAMENTOS {
-        uuid id PK
-        uuid usuario_id FK
-        string descricao
-        decimal valor_total
-        decimal taxa_juros_anual
-        integer total_parcelas
-        date data_inicio
+    FINANCING {
+        UUID id PK
+        String description
+        BigDecimal totalValue
+        BigDecimal annualInterestRate
+        Integer totalInstallments
+        LocalDate startDate
+        UUID user FK
     }
 
-    PARCELAS_FINANCIAMENTO {
-        uuid id PK
-        uuid financiamento_id FK
-        uuid conta_id FK
-        integer numero_parcela
-        decimal valor_parcela
-        date data_vencimento
-        string status
+    FINANCING_INSTALLMENTS {
+        UUID id PK
+        Integer installmentNumber
+        BigDecimal installmentPrice
+        LocalDate dueDate
+        String status
+        UUID financing FK
+        UUID bill FK
     }
 
-    INVESTIMENTOS {
-        uuid id PK
-        uuid usuario_id FK
-        string codigo_ativo
-        string tipo_ativo
-        string instituicao
-        decimal quantidade
-        decimal valor_medio_compra
-        decimal valor_atual
-        date data_ultimo_aporte
+    INVESTMENTS {
+        UUID id PK
+        String assetCode UK
+        String assetType
+        String broker
+        BigDecimal quantity
+        BigDecimal averagePrice
+        BigDecimal currentValue
+        LocalDate lastContributionDate
+        UUID user FK
     }
 ```
 
