@@ -1,15 +1,16 @@
 package com.carmo.Vaultify.Controller;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/api")
+
+@Controller
+@RequestMapping
 public class HelloWoldController {
-    @GetMapping("/hello-world")
+    @GetMapping("/")
     public String helloWorld() {
-        return "Hello World";
+        return "index";
     }
 
 }
