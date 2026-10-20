@@ -1,3 +1,6 @@
+# Oque é a <strong>Vaultify</strong>
+## Vaultify é um sistema de gestão financeira que permite gerenciar suas finanças, dividas, prestações e investimentos em uma unica aplicação web. <br>
+### A ideia surgiu da minha necessidade constante de anotra meus gastos e gerenciar investimentos, porem utilizando planilhas diferentes, outros site para utilizar como carteira de investimentos tudo acabava uma bagunça e minha conta zerada. <br> Foi ai que surgiu a ideia da <strong>Vaultify</strong>, como um sistema seguro, confiavel e expansivel. <br>O Projeto esta em atual desenvolvimento, contendo atualmente tecnologias como... que serão atualizadas diariamente a cada desafio novo que surgir, colocando em pratica oque estou continuamente estudando
 # Modelo Relacional e Diagrama - Sistema de Gerenciamento de Finanças
 
 ## 1. Diagrama de Entidade-Relacionamento (ER)
@@ -140,111 +143,30 @@ erDiagram
 
 ## Como Funciona a Geração de Token Via JWT
 
----
-
-1. Criar uma classe de  serviço para o JWT
-
-```java
-package com.carmo.Vaultify.Service;
-
-import org.springframework.stereotype.Service;
-
-@Service
-public class JwtService {
-    //.....
-}
-```
-
-2. Criar uma String SECRET_KEY que ficara alocada no .env 
-```java
-package com.carmo.Vaultify.Service;
-
-import org.springframework.stereotype.Service;
-
-@Service
-public class JwtService {
-   @Value("${SECRET_KEY}")
-   private String SECRET_KEY;
-}
-```
-3. Criar um metodo para gerar tokens, ira retornar a string do token
-```java
-package com.carmo.Vaultify.Service;
-
-import org.springframework.stereotype.Service;
-
-@Service
-public class JwtService {
-   @Value("${SECRET_KEY}")
-   private String SECRET_KEY;
-
-   public String generateToken(String email){
-      return Jwts.builder()
-              .setSubject(email)
-              .setIssuedAt(new Date(System.currentTimeMillis()))   //seta o momento exato da criacao do token
-              .setExpiration(new Date(System.currentTimeMillis()+ 1000 * 60 * 60 * 10)) //expira em 10 horas
-              .signWith(getSignInKey(), SignatureAlgorithm.HS256)   //escolhe a KEY de verificação e o algorito usado para gerar o token (SHA256)
-              .compact();
-   }
-}
-```
-4. Criar um metodo retonar Claims extractAllClaims -> Claims são as informações dentro do token no formato de dicionario
-```java
-    // metodo para instanciar um objeto que possui todas as claims (delcaracoes do token) ex:dono,quem emitiu, data de expiracao etc..
-private Claims extractAllClaims(String token) {
-   return Jwts.parserBuilder()
-           .setSigningKey(getSignInKey())
-           .build()
-           .parseClaimsJws(token)
-           .getBody();
-}
-```
-5. Criar um metodo aparte que retorna apenas o Claim(declaração) desejada
-```java
-// o return <T> T indica que pode retornar qualquer tipo de dado
-//  basicamente o metodo precisa receber o token e o objeto Claims::parametro
-// onde parametro indica oque voce quer retirar do token e utilizar, como -> subject, expiration
-public <T> T extractClaim (String token, Function<Claims, T> claimsResolver) {
-   final Claims claims = extractAllClaims(token);
-   return claimsResolver.apply(claims);
-}
-```
-
-6. Criar metodos separados par acada um ter sua função de retirar um dado especifico do token
-```java
-//primeira instancia de extractClaim onde passamos o token e o objetos que queremos retirar dele.
-private Date extractExpiration(String token) {
-   return extractClaim(token,Claims::getExpiration);
-}
-
-
-//extrair o subject (email) dentro do token atraves do metodo extractClaim
-public String extracEmail(String token) {
-   return extractClaim(token, Claims::getSubject);
-}
-```
-7. Criar metodos para facilitar a vida -> metodos que ao ser chamados verificam se o token foi expirado e comparar com o email enviado para validar.
-```java
-    // metodo para verificar se o token esta expirado
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date()); //pega a data de expiração e compara com o before(antes) verificando se a data de exipiração é antes
-    }
-
-    //valida se o token pertence ao usuario correto, e se nao expirou
-    public boolean isTokenValid(String token,String email) {
-        final String extractedEmail = extracEmail(email);       // extrai o email do token e compara com o email enviado
-        return extractedEmail.equals(email) && !isTokenExpired(token);
-    }
-```
-## Criando Filtro de verificação de token para cada roda acessada
-1. Criar JwtAuthenticationFilter.java 
-```java
-
-```
-
-
-
-
-```java
-
+<strong>JWT</strong> ou <strong>J</strong>ason <strong>W</strong>eb <strong>T</strong>oken é uma um token assinado digitalmente ou criptografado que garante a seção do usuario, permitindo navegar pela aplicação con suas credencias salvas em sua seção retirando a necessidade de autenticar o usuario a cada requisição.
+## Fluxo de authenticação por <strong>JWT</strong> 
+```markdown
+📁 Fluxo de authenticação por JWT
+│
+├── 📁 1. Classe de Serviço -> JwtService
+│   ├── 📄 Criar Token
+│   ├── 📄 Validar Token
+│   └── 📄 Extrair Claims / Subject
+│
+├── 📁 2. Classe Filtro/Guardiã -> JwtAuthenticationFilter
+│   ├── 📄 Interceptar Requisição HTTP
+│   ├── 📄 Ler Header Authorization
+│   ├── 📄 Validar Token
+│   └── 📄 Popular Contexto de Segurança
+│
+├── 📁 3. Porta de Entrada -> AuthController
+│   ├── 📄 Receber Credenciais
+│   ├── 📄 Autenticar Usuário
+│   └── 📄 Retornar JWT
+│
+└── 📁 4. Regras do Spring -> SecurityConfig
+    ├── 📄 Configurar Sessão STATELESS
+    ├── 📄 Desabilitar CSRF
+    ├── 📄 Configurar Rotas públicas/privadas
+    └── 📄 Injetar Filtro na Cadeia de Segurança
 ```
