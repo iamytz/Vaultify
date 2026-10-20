@@ -342,12 +342,21 @@ As tabelas são criadas automaticamente pelo Hibernate na primeira execução. A
 
 Desenvolvido por **[iamytz](https://github.com/iamytz)**.
 
-Projeto em constante evolução — sugestões e feedbacks são bem-vindos! ⭐
-<p align="center">
-  <a href="https://github.com/iamytz">
-    <img src="https://img.shields.io/badge/GitHub-iamytz-181717?style=for-the-badge&logo=github" alt="GitHub de Gabriel Carmo">
-  </a>
-</p>
+Projeto em constante evolução — sugestões e feedbacks são bem-vindos!!
+<div align="center">
+
+<a href="https://github.com/iamytz">
+<img src="https://img.shields.io/badge/GitHub-iamytz-181717?style=for-the-badge&logo=github" />
+</a>
+<a href="https://www.linkedin.com/in/gabriel-carmo-pe/">
+<img src="https://img.shields.io/badge/LinkedIn-Gabriel%20Carmo-0A66C2?style=for-the-badge&logo=linkedin" />
+</a>
+
+<br> <br>
+
+⭐ *Se você gostou do Vaultify, deixe uma estrela no repositório!*
+</div>
+
 
 <div align="center">
 
