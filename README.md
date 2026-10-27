@@ -264,7 +264,12 @@ Credenciais do banco são lidas de **variáveis de ambiente**, sem dados sensív
 |`AuthController`|Recebe login e entrada de token          |
 
 ## Como tudo isso funciona na pratica?
-`JWtService` Cria o token apartir de uma `SECRET_KEY` enviada junto ao .env, deixando sua assinatura, data de criação e expiração do token e implementando metodos para verificar os mesmos.
+`JWtService` Cria o token apartir de uma `SECRET_KEY` enviada junto ao .env, deixando sua assinatura, data de criação e expiração do token e implementando metodos para verificar os mesmos. <br>
+1. Cria a chave em Base64.
+2. Transforma a chave de Base64 para um array de bytes.
+3. transforma o array de bytes em um SecretKey utilizando o algoritcmo hmac.
+4. Cria token com a assinatura da chave ja criptografada.
+5. Verifica se o token é valido apartir dos claims dentro do payload.
 <details>
 <summary>Código</summary>
 
@@ -345,37 +350,77 @@ public class JwtService {
 ````
 </details>
 
-`JwtAuthenticatorFilter` Recebe cada requisição e define como rotas  seguras ou publicas, interceptando cada requisição e verificando o payload
+`JwtAuthenticatorFilter` Recebe cada requisição e define como rotas  seguras ou publicas, interceptando cada requisição e verificando o payload <br>
+1. Verifica se o header e sem nao veio vazio sem o `Authorization`  Se não so prossegue sem autenticar.
+2. Verifica se o tokem começa com `Bearer ` para extrair o tokem do header. Se não so prossegue sem autenticar.
+3. Tenta extrair o email do token utilizando o `jwtService` instanciado. Se não so prossegue sem autenticar.
+4. Tenta achar um usuario com `userDetailsService` instanciado. Se não so prossegue sem autenticar.
+5. valida o usuario.
 <details>
 <summary>Código</summary>
 
 ```java
 import com.carmo.Vaultify.Service.JwtService;
+import io.jsonwebtoken.JwtException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @AllArgsConstructor
 public class JwtAuthenticatorFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     @Override
+
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-        filterChain.doFilter(request,response);
-        return;
-    }
-    String jwtToken = authHeader.substring(7);
-    String email = jwtService.extractSubject(jwtToken);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        String jwtToken = authHeader.substring(7);
+
+        String email;
+        try {
+            email = jwtService.extractSubject(jwtToken);
+        } catch (JwtException | IllegalArgumentException e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        //verifica se o token realmente tem um email dentro
+
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) { //  SecurityContextHolder.getContext().getAuthentication() == null -> verifica se veio realmete um email e se o usuario ainda nao foi autenticado.
+            UserDetails userDetails;
+            try {
+                userDetails = userDetailsService.loadUserByUsername(email);
+            } catch (UsernameNotFoundException e) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            if (jwtService.tokenValid(jwtToken, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
+
+        } 
+        filterChain.doFilter(request, response);
+
+
     }
 
 }
 ```
-
 </details>
-
 
 `SecurityConfig` 
 
