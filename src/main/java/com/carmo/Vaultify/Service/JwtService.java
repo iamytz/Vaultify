@@ -1,9 +1,11 @@
 package com.carmo.Vaultify.Service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -18,7 +20,7 @@ public class JwtService {
     private  String SECRET_KEY;
 
     //CRIANDO A CHAVE PARA ASSINATURA DE TOKEN
-    public SecretKey generateKey() {
+    private SecretKey generateKey() {
         byte[] keybytes = Base64.getDecoder().decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keybytes);
     }
@@ -44,6 +46,23 @@ public class JwtService {
 
     public String extractSubject(String token) {
         return extractClaims(token,Claims::getSubject);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaims(token, Claims::getExpiration);
+    }
+
+    public boolean tokenExpirated(String token) {
+        return extractExpiration(token).before(new Date(System.currentTimeMillis()));
+    }
+
+    public boolean tokenValid(String token, UserDetails userDetails) {
+        try {
+            String subject = extractSubject(token);
+            return subject.equals(userDetails.getUsername()) && !tokenExpirated(token);
+        }catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
 }

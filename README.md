@@ -255,6 +255,130 @@ Credenciais do banco são lidas de **variáveis de ambiente**, sem dados sensív
 
 ---
 
+## Como Funciona a Autenticação com <strong>JWT</strong>
+| Classe | Oque faz |
+| ------ | -------- |
+|`JwtService` | Cria e valida o token | 
+|`JwtAuthenticatorFilter` | Controla cada request|
+|`SecurityConfig`| Define as regras de segurança|
+|`AuthController`|Recebe login e entrada de token          |
+
+## Como tudo isso funciona na pratica?
+`JWtService` Cria o token apartir de uma `SECRET_KEY` enviada junto ao .env, deixando sua assinatura, data de criação e expiração do token e implementando metodos para verificar os mesmos.
+<details>
+<summary>Código</summary>
+
+````java
+import com.carmo.Vaultify.Dto.UsersDto;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import javax.crypto.SecretKey;
+import java.util.Base64;
+import java.util.Date;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+    @Value("${SECRET_KEY}") //recebe a chave do .env
+    private String SECRET_KEY;
+
+    //criar o metodo para gerar as secret_key
+    private SecretKey generateKey() {
+        byte[] keyBytes = Base64.getDecoder().decode(SECRET_KEY);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    //criar metodo para gerar token assinados com a chave criada anteriormente
+    public String generateToken(String email) {
+        return Jwts.builder()
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .subject(email)
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 2)) //   expira o token em 2 horas
+                .signWith(generateKey())
+                .compact();
+    }
+
+    //extrair os claims do token -> declaracoes do payload
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(generateKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    //metodos para retornar qualque claims
+    public <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        return resolver.apply(extractAllClaims(token));
+    }
+
+    public String extractSubject(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public Date extractIssuedAt(String token) {
+        return extractClaim(token, Claims::getIssuedAt);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public boolean tokenExpirated(String token) {
+        return extractExpiration(token).before(new Date(System.currentTimeMillis()));
+    }
+
+    public boolean tokenValid(String token, UserDetails userDetails) {
+        try {
+            String subject = extractSubject(token);
+            return subject.equals(userDetails.getUsername()) && !tokenExpirated(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+}
+````
+</details>
+
+`JwtAuthenticatorFilter` Recebe cada requisição e define como rotas  seguras ou publicas, interceptando cada requisição e verificando o payload
+<details>
+<summary>Código</summary>
+
+```java
+import com.carmo.Vaultify.Service.JwtService;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+@AllArgsConstructor
+public class JwtAuthenticatorFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String authHeader = request.getHeader("Authorization");
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        filterChain.doFilter(request,response);
+        return;
+    }
+    String jwtToken = authHeader.substring(7);
+    String email = jwtService.extractSubject(jwtToken);
+    }
+
+}
+```
+
+</details>
+
+
+`SecurityConfig` 
+
 ## 🔌 Endpoints
 
 | Método | Rota | Descrição | Retorno |
@@ -314,6 +438,7 @@ export DATABASE_PWD="sua_senha"
 $env:DATABASE_URL="jdbc:mysql://localhost:3306/vaultify?createDatabaseIfNotExist=true"
 $env:DATABASE_USERNAME="root"
 $env:DATABASE_PWD="sua_senha"
+$env:SECRET_KEY="sua_secret_key"
 ```
 
 ### 3. Execute a aplicação
