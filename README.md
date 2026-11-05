@@ -87,18 +87,19 @@ O projeto segue uma organização em camadas, separando responsabilidades de apr
 Vaultify
 ├── src/main
 │   ├── java/com/carmo/Vaultify
-│   │   ├── Configuration/        # Configurações (beans de segurança / PasswordEncoder)
-│   │   ├── Controller/           # Endpoints REST e renderização de páginas
-│   │   ├── Dto/                  # Objetos de transferência de dados
-│   │   ├── Service/              # Regras de negócio
-│   │   ├── Validator/            # Validações (política de senha)
+│   │   ├── Configuration/          # Configurações (beans de segurança / PasswordEncoder)
+│   │   ├── Controller/             # Endpoints REST e renderização de páginas
+│   │   ├── Dto/                    # Objetos de transferência de dados
+│   │   │   └── auth/               # Dtos do login
+│   │   ├── Services/               # Regras de negócio
+│   │   ├── SecurityConfiguration/  # Configuração dos Beans spring security
 │   │   ├── Database/
-│   │   │   ├── Entity/           # Entidades JPA (10 tabelas)
-│   │   │   └── Repository/       # Repositórios Spring Data
+│   │   │   ├── Entity/             # Entidades JPA
+│   │   │   └── Repository/         # Repositórios Spring Data
 │   │   └── VaultifyApplication.java
 │   └── resources
-│       ├── templates/            # Páginas Thymeleaf (login.html)
-│       ├── static/               # CSS, JavaScript e imagens
+│       ├── templates/              # Páginas Thymeleaf (login.html)
+│       ├── static/                 # CSS, JavaScript e imagens
 │       └── application.properties
 ├── pom.xml
 └── mvnw / mvnw.cmd
